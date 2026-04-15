@@ -1,0 +1,63 @@
+# ── Build output ──────────────────────────────────────────
+target/
+build/
+out/
+*.class
+*.jar
+*.war
+
+# ── IDE ───────────────────────────────────────────────────
+# IntelliJ
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# VS Code
+.vscode/
+
+# NetBeans
+nbproject/
+nbbuild/
+nbdist/
+
+# ── Maven / Gradle ───────────────────────────────────────
+.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.properties
+mvnw
+mvnw.cmd
+.gradle/
+gradle/
+
+# ── Logs ─────────────────────────────────────────────────
+*.log
+logs/
+
+# ── OS ───────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Environment / secrets ────────────────────────────────
+.env
+.env.*
+!.env.example
+application-local.yml
+application-local.properties
+
+# ── Docker ───────────────────────────────────────────────
+docker-compose.override.yml
+
+# ── Test / profiling ─────────────────────────────────────
+hs_err_pid*
+replay_pid*
+*.hprof
+*.jfr
+
+# ── Spring Boot ──────────────────────────────────────────
+spring-shell.log
