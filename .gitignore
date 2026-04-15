@@ -1,4 +1,4 @@
-# ── Build output ──────────────────────────────────────────
+# Build
 target/
 build/
 out/
@@ -6,58 +6,44 @@ out/
 *.jar
 *.war
 
-# ── IDE ───────────────────────────────────────────────────
-# IntelliJ
+# IDE
 .idea/
 *.iml
 *.iws
 *.ipr
-
-# Eclipse
 .classpath
 .project
 .settings/
-
-# VS Code
 .vscode/
-
-# NetBeans
 nbproject/
-nbbuild/
-nbdist/
 
-# ── Maven / Gradle ───────────────────────────────────────
+# Maven
 .mvn/wrapper/maven-wrapper.jar
 !.mvn/wrapper/maven-wrapper.properties
-mvnw
-mvnw.cmd
-.gradle/
-gradle/
 
-# ── Logs ─────────────────────────────────────────────────
+# Logs
 *.log
 logs/
 
-# ── OS ───────────────────────────────────────────────────
+# OS
 .DS_Store
 Thumbs.db
-desktop.ini
 
-# ── Environment / secrets ────────────────────────────────
+# Secrets
 .env
 .env.*
 !.env.example
 application-local.yml
 application-local.properties
 
-# ── Docker ───────────────────────────────────────────────
+# Docker
 docker-compose.override.yml
 
-# ── Test / profiling ─────────────────────────────────────
+# Test / profiling
 hs_err_pid*
 replay_pid*
 *.hprof
 *.jfr
 
-# ── Spring Boot ──────────────────────────────────────────
-spring-shell.log
+# Testcontainers
+.testcontainers.properties
