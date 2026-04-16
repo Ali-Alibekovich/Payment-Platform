@@ -19,22 +19,24 @@ import java.time.temporal.ChronoUnit;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final SessionTokensService sessionTokens;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
-    private final JwtService jwtService;
     private final int maxFailedAttempts;
     private final long lockDurationMinutes;
 
-    public AuthService(UserRepository userRepository,
-                       PasswordEncoder passwordEncoder,
-                       UserMapper userMapper,
-                       JwtService jwtService,
-                       @Value("${auth.login.max-failed-attempts}") int maxFailedAttempts,
-                       @Value("${auth.login.lock-duration-minutes}") long lockDurationMinutes) {
+    public AuthService(
+            UserRepository userRepository,
+            SessionTokensService sessionTokens,
+            PasswordEncoder passwordEncoder,
+            UserMapper userMapper,
+            @Value("${auth.login.max-failed-attempts}") int maxFailedAttempts,
+            @Value("${auth.login.lock-duration-minutes}") long lockDurationMinutes
+    ) {
         this.userRepository = userRepository;
+        this.sessionTokens = sessionTokens;
         this.passwordEncoder = passwordEncoder;
         this.userMapper = userMapper;
-        this.jwtService = jwtService;
         this.maxFailedAttempts = maxFailedAttempts;
         this.lockDurationMinutes = lockDurationMinutes;
     }
@@ -50,17 +52,14 @@ public class AuthService {
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setStatus(UserStatus.ACTIVE);
         user.setCreatedAt(Instant.now());
-
         user.setFailedLoginAttempts(0);
 
         User savedUser = userRepository.save(user);
-
         return userMapper.toDto(savedUser);
     }
 
     @Transactional(noRollbackFor = {InvalidCredentialsException.class, AccountLockedException.class})
-    public LoginResponseDto login(LoginRequest request) {
-
+    public IssuedTokenPair login(LoginRequest request) {
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(InvalidCredentialsException::new);
 
@@ -90,14 +89,15 @@ public class AuthService {
         user.setLockedUntil(null);
         userRepository.save(user);
 
-        String accessToken = jwtService.generateAccessToken(user);
-        String refreshToken = jwtService.generateRefreshToken(user);
+        return sessionTokens.issuePair(user);
+    }
 
-        return new LoginResponseDto(
-                accessToken,
-                refreshToken,
-                jwtService.getAccessTokenExpirationSeconds(),
-                "Bearer"
-        );
+    @Transactional
+    public IssuedTokenPair refresh(String refreshToken) {
+        return sessionTokens.rotateRefreshToken(refreshToken);
+    }
+
+    public void logout(String accessToken, String refreshToken) {
+        sessionTokens.revokeAccessAndRefresh(accessToken, refreshToken);
     }
 }
