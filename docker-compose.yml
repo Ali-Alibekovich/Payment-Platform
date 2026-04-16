@@ -1,37 +1,54 @@
 services:
   postgres:
-    image: postgres:17
+    image: postgres:latest
     container_name: fintech-postgres
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: fintech
       POSTGRES_USER: fintech
       POSTGRES_PASSWORD: fintech
+      POSTGRES_DB: postgres
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/18/data
+      - ./init:/docker-entrypoint-initdb.d
 
   redis:
     image: redis:7-alpine
     container_name: fintech-redis
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass fintech
+      --maxmemory 2gb
+      --maxmemory-policy volatile-ttl
+      --tcp-keepalive 300
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-a", "STRONG_PASSWORD", "ping" ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
-  kafka:
-    image: confluentinc/cp-kafka:7.7.0
-    container_name: fintech-kafka
-    ports:
-      - "9092:9092"
-    environment:
-      KAFKA_NODE_ID: 1
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-      KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
-      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      CLUSTER_ID: "fintech-local-cluster-001"
+#  kafka:
+#    image: confluentinc/cp-kafka:7.7.0
+#    container_name: fintech-kafka
+#    ports:
+#      - "9092:9092"
+#    environment:
+#      KAFKA_NODE_ID: 1
+#      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+#      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+#      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+#      KAFKA_PROCESS_ROLES: broker,controller
+#      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+#      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+#      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+#      CLUSTER_ID: "fintech-local-cluster-001"
 
 volumes:
   postgres_data:
+  redis_data:

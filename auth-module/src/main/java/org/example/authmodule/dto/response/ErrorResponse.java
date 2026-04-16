@@ -1,4 +1,4 @@
-package org.example.authmodule.dto.error;
+package org.example.authmodule.dto.response;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
