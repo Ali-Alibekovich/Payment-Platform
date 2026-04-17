@@ -4,6 +4,9 @@ import org.example.authmodule.dto.IssuedTokenPair;
 import org.example.authmodule.entity.User;
 import org.springframework.stereotype.Component;
 
+/**
+ * Фасад выпуска пары токенов (access + refresh) для пользователя.
+ */
 @Component
 public class TokenPairIssuer {
 
@@ -15,6 +18,12 @@ public class TokenPairIssuer {
         this.signer = signer;
     }
 
+    /**
+     * Выпускает новую пару токенов и метаданные времени жизни.
+     *
+     * @param user пользователь, для которого выпускаются токены
+     * @return структура с access/refresh токенами и временем жизни
+     */
     public IssuedTokenPair issue(User user) {
         return new IssuedTokenPair(
                 signer.sign(TokenKind.ACCESS, user),

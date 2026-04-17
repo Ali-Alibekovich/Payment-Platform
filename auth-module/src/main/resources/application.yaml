@@ -35,7 +35,7 @@ auth:
   cookies:
     refresh-token-name: refresh_token
     path: /api/v1/auth
-    secure: ${AUTH_COOKIE_SECURE:false}
+    secure: ${AUTH_COOKIE_SECURE:false} # В проде задать true
     same-site: ${AUTH_COOKIE_SAME_SITE:Lax}
     http-only: true
 

@@ -5,6 +5,12 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Запрос на операцию авторизации
+ *
+ * @param email    почта
+ * @param password пароль
+ */
 public record LoginRequest(
         @NotBlank
         @Email(message = "Invalid email format")

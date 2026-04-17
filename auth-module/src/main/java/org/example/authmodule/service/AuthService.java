@@ -2,9 +2,8 @@ package org.example.authmodule.service;
 
 import org.example.authmodule.dto.*;
 import org.example.authmodule.entity.User;
-import org.example.authmodule.exception.AccountLockedException;
-import org.example.authmodule.exception.EmailAlreadyExistsException;
-import org.example.authmodule.exception.InvalidCredentialsException;
+import org.example.authmodule.exception.BusinessException;
+import org.example.authmodule.exception.ErrorCode;
 import org.example.authmodule.mapper.UserMapper;
 import org.example.authmodule.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,7 +13,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Map;
 
+/**
+ * Сервис авторизации
+ */
 @Service
 public class AuthService {
 
@@ -43,7 +46,7 @@ public class AuthService {
 
     public UserResponseDto register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.email())) {
-            throw new EmailAlreadyExistsException();
+            throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
 
         User user = new User();
@@ -58,15 +61,19 @@ public class AuthService {
         return userMapper.toDto(savedUser);
     }
 
-    @Transactional(noRollbackFor = {InvalidCredentialsException.class, AccountLockedException.class})
+    @Transactional(noRollbackFor = BusinessException.class)
     public IssuedTokenPair login(LoginRequest request) {
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(InvalidCredentialsException::new);
+                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
 
         Instant now = Instant.now();
         if (user.getLockedUntil() != null) {
             if (now.isBefore(user.getLockedUntil())) {
-                throw new AccountLockedException(lockDurationMinutes);
+                throw new BusinessException(
+                        ErrorCode.ACCOUNT_TEMPORARILY_LOCKED,
+                        "Вход временно заблокирован. Повторите через " + lockDurationMinutes + " мин.",
+                        Map.of("retryAfterMinutes", lockDurationMinutes)
+                );
             }
             user.setFailedLoginAttempts(0);
             user.setLockedUntil(null);
@@ -78,11 +85,19 @@ public class AuthService {
             if (attempts >= maxFailedAttempts) {
                 user.setLockedUntil(now.plus(lockDurationMinutes, ChronoUnit.MINUTES));
                 userRepository.save(user);
-                throw new AccountLockedException(lockDurationMinutes);
+                throw new BusinessException(
+                        ErrorCode.ACCOUNT_TEMPORARILY_LOCKED,
+                        "Вход временно заблокирован. Повторите через " + lockDurationMinutes + " мин.",
+                        Map.of("retryAfterMinutes", lockDurationMinutes)
+                );
             }
             userRepository.save(user);
             int remaining = maxFailedAttempts - attempts;
-            throw new InvalidCredentialsException(remaining);
+            throw new BusinessException(
+                    ErrorCode.INVALID_CREDENTIALS,
+                    "Неверный пароль. Осталось попыток: " + remaining,
+                    Map.of("remainingAttempts", remaining)
+            );
         }
 
         user.setFailedLoginAttempts(0);

@@ -22,6 +22,13 @@ public class JwtSigner {
         this.keys = keys;
     }
 
+    /**
+     * Подписывает JWT заданного вида для пользователя.
+     *
+     * @param kind тип токена (access/refresh)
+     * @param user пользователь
+     * @return сериализованный JWT
+     */
     public String sign(TokenKind kind, User user) {
         var props = keys.properties();
         Instant now = Instant.now();
@@ -41,6 +48,12 @@ public class JwtSigner {
         return builder.compact();
     }
 
+    /**
+     * Возвращает TTL токена в секундах для HTTP-ответов/клиентов.
+     *
+     * @param kind тип токена
+     * @return время жизни в секундах
+     */
     public int expiresInSeconds(TokenKind kind) {
         return Math.toIntExact(kind.expirationMs(keys.properties()) / 1000);
     }
