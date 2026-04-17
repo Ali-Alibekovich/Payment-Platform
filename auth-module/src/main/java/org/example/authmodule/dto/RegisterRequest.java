@@ -5,6 +5,13 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Запрос на регистрацию
+ *
+ * @param email    почта
+ * @param password пароль
+ * @param fullName имя
+ */
 public record RegisterRequest(
         @NotBlank
         @Email(message = "Invalid email format")

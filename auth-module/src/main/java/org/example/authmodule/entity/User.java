@@ -8,6 +8,9 @@ import org.example.authmodule.dto.UserStatus;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Сущность для хранения записи о пользователях
+ */
 @Getter
 @Setter
 @Entity
@@ -30,12 +33,18 @@ public class User {
     @Enumerated(EnumType.STRING)
     private UserStatus status;
 
-    @Column(nullable = false, updatable = false)
-    private Instant createdAt;
-
     @Column(nullable = false)
-    private int failedLoginAttempts = 0;
+    private Integer failedLoginAttempts = 0;
 
     @Column
     private Instant lockedUntil;
+
+    @Column
+    private Instant anonymizedAt;
+
+    @Column(nullable = false, updatable = false)
+    private Instant createdAt = Instant.now();
+
+    @Column(nullable = false)
+    private Instant updatedAt = Instant.now();
 }
