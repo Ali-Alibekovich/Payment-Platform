@@ -22,6 +22,13 @@ public class JwtVerifier {
         this.keys = keys;
     }
 
+    /**
+     * Проверяет подпись/срок/issuer и соответствие типа токена.
+     *
+     * @param token    сырой JWT
+     * @param expected ожидаемый тип токена
+     * @return результат парсинга с детализацией причины
+     */
     public JwtParseResult verify(String token, TokenKind expected) {
         if (token == null || token.isBlank()) {
             return new JwtParseResult.Invalid("empty token");

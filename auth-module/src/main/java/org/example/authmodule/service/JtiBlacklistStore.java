@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Хранилище отозванных JWT по jti (Redis). Общее для access и refresh.
+ * Предназначено для ограничения доступа пользователям выполнившие logout
  */
 @Service
 public class JtiBlacklistStore {

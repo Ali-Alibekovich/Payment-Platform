@@ -5,13 +5,21 @@ import lombok.RequiredArgsConstructor;
 import org.example.authmodule.config.RefreshTokenCookieFactory;
 import org.example.authmodule.dto.*;
 import org.example.authmodule.dto.response.ApiResponse;
+import org.example.authmodule.exception.BusinessException;
+import org.example.authmodule.exception.ErrorCode;
 import org.example.authmodule.service.AuthService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+import java.util.Map;
+
+
+/**
+ * Контроллер авторизации
+ */
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
@@ -41,7 +49,14 @@ public class AuthController {
     ) {
         String raw = firstNonBlank(refreshFromCookie, body != null ? body.refreshToken() : null);
         if (raw == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Нужен refresh-токен в cookie или в теле { \"refreshToken\": \"...\" }");
+            throw new BusinessException(
+                    ErrorCode.VALIDATION_ERROR,
+                    "Проверьте введённые данные",
+                    Map.of("fields", List.of(Map.of(
+                            "field", "refreshToken",
+                            "message", "Нужен refresh-токен в cookie или в теле запроса"
+                    )))
+            );
         }
         var pair = authService.refresh(raw);
         return ResponseEntity.ok()

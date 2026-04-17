@@ -36,14 +36,23 @@ public class JwtKeys {
                 .build();
     }
 
+    /**
+     * @return настройки JWT из конфигурации приложения
+     */
     public JwtProperties properties() {
         return properties;
     }
 
+    /**
+     * @return симметричный ключ подписи
+     */
     public SecretKey signingKey() {
         return signingKey;
     }
 
+    /**
+     * @return преднастроенный парсер JWT с проверкой issuer и clock skew
+     */
     public JwtParser parser() {
         return parser;
     }

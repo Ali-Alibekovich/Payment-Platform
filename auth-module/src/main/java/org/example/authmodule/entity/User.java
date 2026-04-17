@@ -8,6 +8,9 @@ import org.example.authmodule.dto.UserStatus;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Сущность для хранения записи о пользователях
+ */
 @Getter
 @Setter
 @Entity
