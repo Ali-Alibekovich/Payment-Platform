@@ -2,17 +2,6 @@
 
 Модульный монолит: Java 17 / Spring Boot / PostgreSQL / Redis / Kafka
 
-# Зачем нужен этот проект?
-
-Проект был создан в учебных целях
-
-## Запуск
-
-```bash
-docker-compose up -d
-./mvnw spring-boot:run
-```
-
 ## Модули
 
 | Модуль              | Ответственность                        |
