@@ -1,31 +1,51 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/auth_module
-    username: postgres
-    password: postgres
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/auth_db}
+    username: ${DATABASE_USERNAME:fintech}
+    password: ${DATABASE_PASSWORD:fintech}
     driver-class-name: org.postgresql.Driver
-
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: ${JPA_DDL_AUTO:validate}
     properties:
       hibernate:
-        format_sql: true
+        format_sql: ${JPA_FORMAT_SQL:true}
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:fintech}
+  flyway:
+    enabled: ${FLYWAY_ENABLED:true}
+    validate-on-migrate: ${FLYWAY_VALIDATE_ON_MIGRATE:true}
 
 jwt:
-  # В проде задайте JWT_SECRET (например: openssl rand -base64 48)
   secret: ${JWT_SECRET:change-me-use-env-in-production-min-32-chars!!}
   issuer: ${JWT_ISSUER:payment-platform-auth}
   clock-skew-seconds: ${JWT_CLOCK_SKEW_SECONDS:60}
-  access-expiration-ms: ${JWT_ACCESS_EXPIRATION_MS:900000}        # 15 минут
-  refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:2592000000}   # 30 дней
+  access-expiration-ms: ${JWT_ACCESS_EXPIRATION_MS:900000}
+  refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:2592000000}
 
 auth:
   login:
     max-failed-attempts: ${AUTH_LOGIN_MAX_FAILED:5}
     lock-duration-minutes: ${AUTH_LOGIN_LOCK_MINUTES:15}
+  cookies:
+    refresh-token-name: ${AUTH_COOKIE_REFRESH_TOKEN_NAME:refresh_token}
+    path: ${AUTH_COOKIE_PATH:/api/v1/auth}
+    secure: ${AUTH_COOKIE_SECURE:false}
+    same-site: ${AUTH_COOKIE_SAME_SITE:Lax}
+    http-only: ${AUTH_COOKIE_HTTP_ONLY:true}
+  admin:
+    email: ${AUTH_ADMIN_EMAIL:admin@payment-platform.local}
+    password: ${AUTH_ADMIN_PASSWORD:F1xMeee!}
+    full-name: ${AUTH_ADMIN_FULL_NAME:Administrator}
+    role-name: ${AUTH_ADMIN_ROLE:ADMIN}
 
 server:
-  port: 9091
+  port: ${SERVER_PORT:9091}
+
+logging:
+  level:
+    org.example: ${LOG_LEVEL_ORG_EXAMPLE:DEBUG}
