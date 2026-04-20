@@ -1,18 +1,23 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/auth_module
-    username: postgres
-    password: postgres
+    url: jdbc:postgresql://localhost:5432/auth_db
+    username: fintech
+    password: fintech
     driver-class-name: org.postgresql.Driver
-
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: validate
     properties:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: fintech
+  flyway:
+    enabled: true
 
 jwt:
   # В проде задайте JWT_SECRET (например: openssl rand -base64 48)
@@ -26,6 +31,20 @@ auth:
   login:
     max-failed-attempts: ${AUTH_LOGIN_MAX_FAILED:5}
     lock-duration-minutes: ${AUTH_LOGIN_LOCK_MINUTES:15}
+  cookies:
+    refresh-token-name: refresh_token
+    path: /api/v1/auth
+    secure: ${AUTH_COOKIE_SECURE:false} # В проде задать true
+    same-site: ${AUTH_COOKIE_SAME_SITE:Lax}
+    http-only: true
+  admin:
+    email: ${AUTH_ADMIN_EMAIL:admin@payment-platform.local}
+    password: ${AUTH_ADMIN_PASSWORD:F1xMeee!}
+    full-name: ${AUTH_ADMIN_FULL_NAME:Administrator}
+    role-name: ${AUTH_ADMIN_ROLE:ADMIN}
 
 server:
   port: 9091
+logging:
+  level:
+    org.example.*: DEBUG

@@ -1,11 +1,17 @@
-package org.example.authmodule.dto;
+package org.example.authmodule.dto.auth.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-public record RegisterRequest(
+/**
+ * Запрос на операцию авторизации
+ *
+ * @param email    почта
+ * @param password пароль
+ */
+public record LoginRequest(
         @NotBlank
         @Email(message = "Invalid email format")
         String email,
@@ -16,11 +22,5 @@ public record RegisterRequest(
                 regexp = "^(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&]).+$",
                 message = "Password must contain 1 uppercase letter, 1 digit, and 1 special character"
         )
-        String password,
-
-        @NotBlank
-        @Size(min = 2, max = 255, message = "Full name must be between 2 and 255 characters")
-        String fullName
-
-) {
+        String password) {
 }
