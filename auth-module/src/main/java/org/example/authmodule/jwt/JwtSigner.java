@@ -2,9 +2,12 @@ package org.example.authmodule.jwt;
 
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
+import org.example.authcommon.jwt.JwtClaimNames;
+import org.example.authcommon.jwt.JwtKeys;
 import org.example.authmodule.entity.User;
 import org.springframework.stereotype.Component;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
@@ -17,9 +20,11 @@ import java.util.UUID;
 public class JwtSigner {
 
     private final JwtKeys keys;
+    private final Clock clock;
 
-    public JwtSigner(JwtKeys keys) {
+    public JwtSigner(JwtKeys keys, Clock clock) {
         this.keys = keys;
+        this.clock = clock;
     }
 
     /**
@@ -31,7 +36,7 @@ public class JwtSigner {
      */
     public String sign(TokenKind kind, User user) {
         var props = keys.properties();
-        Instant now = Instant.now();
+        Instant now = clock.instant();
         Instant expiresAt = now.plusMillis(kind.expirationMs(props));
 
         JwtBuilder builder = Jwts.builder()

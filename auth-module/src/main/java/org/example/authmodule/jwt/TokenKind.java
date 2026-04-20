@@ -2,8 +2,14 @@ package org.example.authmodule.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtBuilder;
+import org.example.authcommon.jwt.JwtClaimNames;
+import org.example.authcommon.jwt.JwtProperties;
+import org.example.authmodule.entity.Role;
 import org.example.authmodule.entity.User;
-import org.example.authmodule.properties.JwtProperties;
+
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Стратегия для каждого вида токена: TTL, subject, дополнительные claims и
@@ -25,15 +31,21 @@ public enum TokenKind {
 
         @Override
         public void enrich(JwtBuilder builder, User user) {
-            builder.claim(JwtClaimNames.USER_ID, user.getId().toString());
+            builder.claim(JwtClaimNames.USER_ID, user.getUserId().toString());
+            builder.claim(JwtClaimNames.ROLES, collectRoleNames(user));
         }
 
         @Override
         public TokenClaims project(Claims claims) {
+            Object raw = claims.get(JwtClaimNames.ROLES);
+            Set<String> roles = raw instanceof Collection<?> c
+                    ? c.stream().map(Object::toString).collect(Collectors.toUnmodifiableSet())
+                    : Set.of();
             return new AccessClaims(
                     claims.getId(),
                     claims.getSubject(),
                     claims.get(JwtClaimNames.USER_ID, String.class),
+                    roles,
                     claims.getExpiration().toInstant()
             );
         }
@@ -47,7 +59,7 @@ public enum TokenKind {
 
         @Override
         public String subject(User user) {
-            return user.getId().toString();
+            return user.getUserId().toString();
         }
 
         @Override
@@ -82,4 +94,20 @@ public enum TokenKind {
     public abstract void enrich(JwtBuilder builder, User user);
 
     public abstract TokenClaims project(Claims claims);
+
+    private static List<String> collectRoleNames(User user) {
+        Stream<Role> direct = user.getRoles() == null ? Stream.empty() : user.getRoles().stream();
+        Stream<Role> fromGroups = user.getGroups() == null
+                ? Stream.empty()
+                : user.getGroups().stream()
+                .filter(Objects::nonNull)
+                .flatMap(g -> g.getRoles() == null ? Stream.empty() : g.getRoles().stream());
+        return Stream.concat(direct, fromGroups)
+                .filter(Objects::nonNull)
+                .map(Role::getRoleName)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(TreeSet::new))
+                .stream()
+                .toList();
+    }
 }

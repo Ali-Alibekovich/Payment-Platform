@@ -1,7 +1,8 @@
 package org.example.authmodule.service;
 
-import org.example.authmodule.dto.IssuedTokenPair;
+import org.example.authcommon.security.JtiBlacklistStore;
 import org.example.authmodule.dto.UserStatus;
+import org.example.authmodule.dto.auth.response.IssuedTokenPair;
 import org.example.authmodule.entity.User;
 import org.example.authmodule.exception.BusinessException;
 import org.example.authmodule.exception.ErrorCode;
@@ -9,7 +10,6 @@ import org.example.authmodule.jwt.*;
 import org.example.authmodule.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Map;
@@ -58,13 +58,12 @@ public class SessionTokensService {
      * @param rawRefreshToken refresh токен
      * @return новая пара токенов (access, refresh)
      */
-    @Transactional
     public IssuedTokenPair rotateRefreshToken(String rawRefreshToken) {
         RefreshClaims claims = jwtVerifier.verify(rawRefreshToken, TokenKind.REFRESH)
                 .claimsAs(RefreshClaims.class)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN));
 
-        if (blacklist.isRevoked(claims.jti())) {
+        if (!blacklist.tryRevoke(claims.jti(), JwtTtl.secondsUntil(claims.expiresAt()))) {
             throw new BusinessException(ErrorCode.REFRESH_TOKEN_REVOKED);
         }
 
@@ -90,8 +89,6 @@ public class SessionTokensService {
                     Map.of("retryAfterMinutes", lockDurationMinutes)
             );
         }
-
-        blacklist.revokeUntilExpiry(claims.jti(), JwtTtl.secondsUntil(claims.expiresAt()));
 
         return tokenPairIssuer.issue(user);
     }

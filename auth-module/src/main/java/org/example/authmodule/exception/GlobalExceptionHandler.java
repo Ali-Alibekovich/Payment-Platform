@@ -1,6 +1,6 @@
 package org.example.authmodule.exception;
 
-import org.example.authmodule.dto.response.ErrorResponse;
+import org.example.authmodule.dto.error.ErrorResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;

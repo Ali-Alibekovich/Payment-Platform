@@ -1,6 +1,6 @@
 package org.example.authmodule.jwt;
 
-import org.example.authmodule.dto.IssuedTokenPair;
+import org.example.authmodule.dto.auth.response.IssuedTokenPair;
 import org.example.authmodule.entity.User;
 import org.springframework.stereotype.Component;
 

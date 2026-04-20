@@ -1,6 +1,10 @@
 package org.example.authmodule.service;
 
-import org.example.authmodule.dto.*;
+import org.example.authmodule.dto.UserStatus;
+import org.example.authmodule.dto.auth.request.LoginRequest;
+import org.example.authmodule.dto.auth.request.RegisterRequest;
+import org.example.authmodule.dto.auth.response.IssuedTokenPair;
+import org.example.authmodule.dto.auth.response.UserResponse;
 import org.example.authmodule.entity.User;
 import org.example.authmodule.exception.BusinessException;
 import org.example.authmodule.exception.ErrorCode;
@@ -44,7 +48,8 @@ public class AuthService {
         this.lockDurationMinutes = lockDurationMinutes;
     }
 
-    public UserResponseDto register(RegisterRequest request) {
+    @Transactional
+    public UserResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.email())) {
             throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
@@ -63,7 +68,7 @@ public class AuthService {
 
     @Transactional(noRollbackFor = BusinessException.class)
     public IssuedTokenPair login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.email())
+        User user = userRepository.findByEmailForUpdate(request.email())
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
 
         Instant now = Instant.now();
@@ -107,7 +112,6 @@ public class AuthService {
         return sessionTokens.issuePair(user);
     }
 
-    @Transactional
     public IssuedTokenPair refresh(String refreshToken) {
         return sessionTokens.rotateRefreshToken(refreshToken);
     }

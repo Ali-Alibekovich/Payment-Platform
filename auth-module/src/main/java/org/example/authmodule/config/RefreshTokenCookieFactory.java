@@ -1,7 +1,7 @@
 package org.example.authmodule.config;
 
+import org.example.authcommon.jwt.JwtProperties;
 import org.example.authmodule.properties.AuthCookieProperties;
-import org.example.authmodule.properties.JwtProperties;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 

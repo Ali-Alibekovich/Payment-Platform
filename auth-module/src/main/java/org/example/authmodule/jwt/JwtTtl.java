@@ -7,9 +7,6 @@ import java.time.Instant;
  */
 public final class JwtTtl {
 
-    private JwtTtl() {
-    }
-
     /**
      * Возвращает, сколько секунд осталось до истечения.
      *

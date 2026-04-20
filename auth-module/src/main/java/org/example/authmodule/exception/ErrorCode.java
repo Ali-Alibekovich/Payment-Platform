@@ -31,6 +31,12 @@ public enum ErrorCode {
             "Недействительный или просроченный refresh-токен"
     ),
 
+    INVALID_ACCESS_TOKEN(
+            HttpStatus.UNAUTHORIZED,
+            "INVALID_ACCESS_TOKEN",
+            "Недействительный или просроченный access-токен"
+    ),
+
     REFRESH_TOKEN_REVOKED(
             HttpStatus.UNAUTHORIZED,
             "REFRESH_TOKEN_REVOKED",
@@ -47,7 +53,25 @@ public enum ErrorCode {
             HttpStatus.BAD_REQUEST,
             "REQUEST_FAILED",
             "Ошибка запроса"
-    );
+    ),
+    GROUP_ALREADY_EXISTS(
+            HttpStatus.CONFLICT,
+            "GROUP_ALREADY_EXISTS",
+            "Группа с таким именем уже существует"
+    ),
+    ROLE_ALREADY_EXISTS(
+            HttpStatus.CONFLICT,
+            "ROLE_ALREADY_EXISTS",
+            "Роль с таким именем уже существует"
+    ),
+    ROLE_OR_GROUP_NOT_FOUND(
+            HttpStatus.BAD_REQUEST,
+            "ROLE_NOT_FOUND",
+            "Роль или группа с такими ид не существует"
+    ), USER_NOT_FOUND(
+            HttpStatus.BAD_REQUEST,
+            "USER_NOT_FOUND",
+            "Акканут с таким ид не найдке");
 
     private final HttpStatus status;
     private final String code;

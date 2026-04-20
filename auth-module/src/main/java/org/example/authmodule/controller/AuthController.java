@@ -3,8 +3,12 @@ package org.example.authmodule.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.authmodule.config.RefreshTokenCookieFactory;
-import org.example.authmodule.dto.*;
-import org.example.authmodule.dto.response.ApiResponse;
+import org.example.authmodule.dto.ApiResponse;
+import org.example.authmodule.dto.auth.request.LoginRequest;
+import org.example.authmodule.dto.auth.request.RefreshTokenRequest;
+import org.example.authmodule.dto.auth.request.RegisterRequest;
+import org.example.authmodule.dto.auth.response.LoginResponse;
+import org.example.authmodule.dto.auth.response.UserResponse;
 import org.example.authmodule.exception.BusinessException;
 import org.example.authmodule.exception.ErrorCode;
 import org.example.authmodule.service.AuthService;
@@ -29,13 +33,13 @@ public class AuthController {
     private final RefreshTokenCookieFactory refreshTokenCookieFactory;
 
     @PostMapping(path = "/register")
-    public ResponseEntity<ApiResponse<UserResponseDto>> register(@RequestBody @Valid RegisterRequest request) {
-        UserResponseDto userResponseDto = authService.register(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.of(userResponseDto));
+    public ResponseEntity<ApiResponse<UserResponse>> register(@RequestBody @Valid RegisterRequest request) {
+        UserResponse userResponse = authService.register(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.of(userResponse));
     }
 
     @PostMapping(path = "/login")
-    public ResponseEntity<ApiResponse<LoginResponseDto>> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse<LoginResponse>> login(@RequestBody @Valid LoginRequest request) {
         var pair = authService.login(request);
         return ResponseEntity.status(HttpStatus.OK)
                 .header(HttpHeaders.SET_COOKIE, refreshTokenCookieFactory.create(pair.refreshToken()).toString())
@@ -43,7 +47,7 @@ public class AuthController {
     }
 
     @PostMapping(path = "/refresh")
-    public ResponseEntity<ApiResponse<LoginResponseDto>> refresh(
+    public ResponseEntity<ApiResponse<LoginResponse>> refresh(
             @CookieValue(name = "${auth.cookies.refresh-token-name:refresh_token}", required = false) String refreshFromCookie,
             @RequestBody(required = false) RefreshTokenRequest body
     ) {
@@ -69,8 +73,8 @@ public class AuthController {
             @RequestHeader("Authorization") String authHeader,
             @CookieValue(name = "${auth.cookies.refresh-token-name:refresh_token}", required = false) String refreshToken
     ) {
-        String token = authHeader.replace("Bearer ", "");
-        authService.logout(token, refreshToken);
+        String rawToken = authHeader.startsWith("Bearer") ? authHeader.substring(7) : null;
+        authService.logout(rawToken, refreshToken);
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, refreshTokenCookieFactory.clear().toString())
                 .build();

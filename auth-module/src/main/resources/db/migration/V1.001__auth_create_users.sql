@@ -1,6 +1,6 @@
 CREATE TABLE users
 (
-    id                    UUID PRIMARY KEY                  DEFAULT uuidv7(),
+    user_id UUID PRIMARY KEY DEFAULT uuidv7(),
     email                 VARCHAR(255)             NOT NULL UNIQUE,
     password_hash         VARCHAR(255)             NOT NULL,
     full_name             VARCHAR(255)             NOT NULL,
@@ -13,7 +13,7 @@ CREATE TABLE users
 );
 
 comment on table users is 'Зарегистрированные пользователи';
-comment on column users.id is 'Идентификатор';
+comment on column users.user_id is 'Идентификатор';
 comment on column users.email is 'Почта';
 comment on column users.password_hash is 'Захешированный пароль';
 comment on column users.full_name is 'Полное имя пользователя';
