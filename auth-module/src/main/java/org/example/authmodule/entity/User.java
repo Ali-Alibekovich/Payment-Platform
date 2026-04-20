@@ -6,8 +6,12 @@ import lombok.Setter;
 import org.example.authmodule.dto.UserStatus;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
+/**
+ * Сущность для хранения записи о пользователях
+ */
 @Getter
 @Setter
 @Entity
@@ -16,7 +20,7 @@ public class User {
 
     @Id
     @GeneratedValue
-    private UUID id;
+    private UUID userId;
 
     @Column(nullable = false, unique = true)
     private String email;
@@ -30,12 +34,36 @@ public class User {
     @Enumerated(EnumType.STRING)
     private UserStatus status;
 
-    @Column(nullable = false, updatable = false)
-    private Instant createdAt;
-
     @Column(nullable = false)
-    private int failedLoginAttempts = 0;
+    private Integer failedLoginAttempts = 0;
+
+    //Groups
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "user_group",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "group_id")
+    )
+    private List<Group> groups;
+
+    //Roles
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "user_role",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private List<Role> roles;
 
     @Column
     private Instant lockedUntil;
+
+    @Column
+    private Instant anonymizedAt;
+
+    @Column(nullable = false, updatable = false)
+    private Instant createdAt = Instant.now();
+
+    @Column(nullable = false)
+    private Instant updatedAt = Instant.now();
 }
