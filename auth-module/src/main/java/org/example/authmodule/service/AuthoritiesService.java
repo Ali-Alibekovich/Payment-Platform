@@ -1,6 +1,7 @@
 package org.example.authmodule.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.authmodule.dto.authorities.response.GroupCreateResponse;
 import org.example.authmodule.dto.authorities.response.RoleCreateResponse;
 import org.example.authmodule.entity.Group;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthoritiesService {
@@ -31,6 +33,7 @@ public class AuthoritiesService {
     @Transactional
     public GroupCreateResponse createGroup(String groupName) {
         if (groupRepository.existsByGroupName(groupName)) {
+            log.warn("Group creation rejected: already exists groupName={}", groupName);
             throw new BusinessException(ErrorCode.GROUP_ALREADY_EXISTS);
         }
         var group = new Group();
@@ -38,27 +41,37 @@ public class AuthoritiesService {
         group.setRoles(new ArrayList<>());
         group.setUsers(new ArrayList<>());
 
-
-        return groupMapper.toDto(groupRepository.save(group));
+        var saved = groupRepository.save(group);
+        log.info("Group created groupId={} groupName={}", saved.getGroupId(), groupName);
+        return groupMapper.toDto(saved);
     }
 
     @Transactional
     public RoleCreateResponse createRole(String roleName) {
         if (roleRepository.existsRoleByRoleName(roleName)) {
+            log.warn("Role creation rejected: already exists roleName={}", roleName);
             throw new BusinessException(ErrorCode.ROLE_ALREADY_EXISTS);
         }
         var role = new Role();
         role.setRoleName(roleName);
 
-        return roleMapper.toDto(roleRepository.save(role));
+        var saved = roleRepository.save(role);
+        log.info("Role created roleId={} roleName={}", saved.getRoleId(), roleName);
+        return roleMapper.toDto(saved);
     }
 
     @Transactional
     public void addRoleToGroup(UUID roleId, UUID groupId) {
         Role role = roleRepository.findById(roleId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ROLE_OR_GROUP_NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("Link role->group failed: role not found roleId={}", roleId);
+                    return new BusinessException(ErrorCode.ROLE_OR_GROUP_NOT_FOUND);
+                });
         Group group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ROLE_OR_GROUP_NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("Link role->group failed: group not found groupId={}", groupId);
+                    return new BusinessException(ErrorCode.ROLE_OR_GROUP_NOT_FOUND);
+                });
 
         if (group.getRoles() == null) {
             group.setRoles(new ArrayList<>());
@@ -67,14 +80,21 @@ public class AuthoritiesService {
         group.getRoles().add(role);
 
         groupRepository.save(group);
+        log.info("Role attached to group roleId={} groupId={}", roleId, groupId);
     }
 
     @Transactional
     public void addRoleToUser(UUID roleId, UUID userId) {
         Role role = roleRepository.findById(roleId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ROLE_OR_GROUP_NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("Link role->user failed: role not found roleId={}", roleId);
+                    return new BusinessException(ErrorCode.ROLE_OR_GROUP_NOT_FOUND);
+                });
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("Link role->user failed: user not found userId={}", userId);
+                    return new BusinessException(ErrorCode.USER_NOT_FOUND);
+                });
 
         if (user.getRoles() == null) {
             user.setRoles(new ArrayList<>());
@@ -83,14 +103,21 @@ public class AuthoritiesService {
         user.getRoles().add(role);
 
         userRepository.save(user);
+        log.info("Role attached to user roleId={} userId={}", roleId, userId);
     }
 
     @Transactional
     public void addUserToGroup(UUID userId, UUID groupId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("Link user->group failed: user not found userId={}", userId);
+                    return new BusinessException(ErrorCode.USER_NOT_FOUND);
+                });
         Group group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ROLE_OR_GROUP_NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("Link user->group failed: group not found groupId={}", groupId);
+                    return new BusinessException(ErrorCode.ROLE_OR_GROUP_NOT_FOUND);
+                });
 
         if (user.getGroups() == null) {
             user.setGroups(new ArrayList<>());
@@ -98,5 +125,6 @@ public class AuthoritiesService {
         user.getGroups().add(group);
 
         userRepository.save(user);
+        log.info("User attached to group userId={} groupId={}", userId, groupId);
     }
 }

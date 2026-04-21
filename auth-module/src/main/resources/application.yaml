@@ -48,4 +48,4 @@ server:
 
 logging:
   level:
-    org.example: ${LOG_LEVEL_ORG_EXAMPLE:DEBUG}
+    org.example.authmodule: ${AUTH_MODULE_LOG_LEVEL:DEBUG}
