@@ -1,5 +1,7 @@
 package org.example.authmodule.service;
 
+import lombok.extern.slf4j.Slf4j;
+import org.example.authmodule.config.logging.LogSanitizer;
 import org.example.authmodule.dto.UserStatus;
 import org.example.authmodule.dto.auth.request.LoginRequest;
 import org.example.authmodule.dto.auth.request.RegisterRequest;
@@ -22,6 +24,7 @@ import java.util.Map;
 /**
  * Сервис авторизации
  */
+@Slf4j
 @Service
 public class AuthService {
 
@@ -50,7 +53,9 @@ public class AuthService {
 
     @Transactional
     public UserResponse register(RegisterRequest request) {
+        String maskedEmail = LogSanitizer.maskEmail(request.email());
         if (userRepository.existsByEmail(request.email())) {
+            log.warn("Register rejected: email already exists email={}", maskedEmail);
             throw new BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
 
@@ -63,23 +68,30 @@ public class AuthService {
         user.setFailedLoginAttempts(0);
 
         User savedUser = userRepository.save(user);
+        log.info("User registered userId={} email={}", savedUser.getUserId(), maskedEmail);
         return userMapper.toDto(savedUser);
     }
 
     @Transactional(noRollbackFor = BusinessException.class)
     public IssuedTokenPair login(LoginRequest request) {
+        String maskedEmail = LogSanitizer.maskEmail(request.email());
         User user = userRepository.findByEmailForUpdate(request.email())
-                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
+                .orElseThrow(() -> {
+                    log.warn("Login failed: unknown email email={}", maskedEmail);
+                    return new BusinessException(ErrorCode.INVALID_CREDENTIALS);
+                });
 
         Instant now = Instant.now();
         if (user.getLockedUntil() != null) {
             if (now.isBefore(user.getLockedUntil())) {
+                log.warn("Login blocked: account locked userId={} until={}", user.getUserId(), user.getLockedUntil());
                 throw new BusinessException(
                         ErrorCode.ACCOUNT_TEMPORARILY_LOCKED,
                         "Вход временно заблокирован. Повторите через " + lockDurationMinutes + " мин.",
                         Map.of("retryAfterMinutes", lockDurationMinutes)
                 );
             }
+            log.info("Lock expired, resetting counter userId={}", user.getUserId());
             user.setFailedLoginAttempts(0);
             user.setLockedUntil(null);
         }
@@ -90,6 +102,8 @@ public class AuthService {
             if (attempts >= maxFailedAttempts) {
                 user.setLockedUntil(now.plus(lockDurationMinutes, ChronoUnit.MINUTES));
                 userRepository.save(user);
+                log.warn("Account locked after {} failed attempts userId={} lockDurationMinutes={}",
+                        attempts, user.getUserId(), lockDurationMinutes);
                 throw new BusinessException(
                         ErrorCode.ACCOUNT_TEMPORARILY_LOCKED,
                         "Вход временно заблокирован. Повторите через " + lockDurationMinutes + " мин.",
@@ -98,6 +112,8 @@ public class AuthService {
             }
             userRepository.save(user);
             int remaining = maxFailedAttempts - attempts;
+            log.warn("Login failed: bad password userId={} attempt={} remaining={}",
+                    user.getUserId(), attempts, remaining);
             throw new BusinessException(
                     ErrorCode.INVALID_CREDENTIALS,
                     "Неверный пароль. Осталось попыток: " + remaining,
@@ -109,14 +125,17 @@ public class AuthService {
         user.setLockedUntil(null);
         userRepository.save(user);
 
+        log.info("Login success userId={}", user.getUserId());
         return sessionTokens.issuePair(user);
     }
 
     public IssuedTokenPair refresh(String refreshToken) {
+        log.debug("Refresh requested");
         return sessionTokens.rotateRefreshToken(refreshToken);
     }
 
     public void logout(String accessToken, String refreshToken) {
+        log.debug("Logout requested");
         sessionTokens.revokeAccessAndRefresh(accessToken, refreshToken);
     }
 }
