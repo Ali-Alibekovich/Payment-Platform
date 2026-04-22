@@ -212,7 +212,7 @@ public class SessionTokensService {
         );
     }
 
-    private static String hashToken(String rawToken) {
+    public static String hashToken(String rawToken) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(rawToken.getBytes(StandardCharsets.UTF_8));

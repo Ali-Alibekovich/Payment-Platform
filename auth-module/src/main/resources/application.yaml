@@ -48,4 +48,3 @@ server:
 logging:
   level:
     org.example.authmodule: ${AUTH_MODULE_LOG_LEVEL:DEBUG}
-  config: auth-module/src/main/resources/logback.xml

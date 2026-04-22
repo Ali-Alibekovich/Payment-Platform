@@ -16,18 +16,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.SimpleTransactionStatus;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.HexFormat;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.example.authmodule.service.SessionTokensService.hashToken;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.argThat;
 import static org.mockito.Mockito.*;
@@ -88,7 +86,7 @@ class SessionTokensServiceTest {
         UUID id = UUID.randomUUID();
         RefreshClaims claims = new RefreshClaims("jti-1", id.toString(), Instant.now().plusSeconds(60));
         when(verifier.verify("rt", TokenKind.REFRESH)).thenReturn(new JwtParseResult.Ok(claims));
-        when(refreshTokensRepository.findByTokenHash(sha256("rt"))).thenReturn(Optional.empty());
+        when(refreshTokensRepository.findByTokenHash(hashToken("rt"))).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.rotateRefreshToken("rt"))
                 .isInstanceOf(BusinessException.class)
@@ -103,7 +101,7 @@ class SessionTokensServiceTest {
         RefreshClaims claims = new RefreshClaims("jti-1", id.toString(), Instant.now().plusSeconds(60));
         RefreshTokens stored = storedToken(id, familyId, Status.USED, OffsetDateTime.now().plusMinutes(5));
         when(verifier.verify("rt", TokenKind.REFRESH)).thenReturn(new JwtParseResult.Ok(claims));
-        when(refreshTokensRepository.findByTokenHash(sha256("rt"))).thenReturn(Optional.of(stored));
+        when(refreshTokensRepository.findByTokenHash(hashToken("rt"))).thenReturn(Optional.of(stored));
 
         assertThatThrownBy(() -> service.rotateRefreshToken("rt"))
                 .isInstanceOf(BusinessException.class)
@@ -120,7 +118,7 @@ class SessionTokensServiceTest {
         RefreshClaims claims = new RefreshClaims("jti-1", id.toString(), Instant.now().plusSeconds(60));
         RefreshTokens stored = storedToken(id, familyId, Status.ACTIVE, OffsetDateTime.now().minusMinutes(1));
         when(verifier.verify("rt", TokenKind.REFRESH)).thenReturn(new JwtParseResult.Ok(claims));
-        when(refreshTokensRepository.findByTokenHash(sha256("rt"))).thenReturn(Optional.of(stored));
+        when(refreshTokensRepository.findByTokenHash(hashToken("rt"))).thenReturn(Optional.of(stored));
 
         assertThatThrownBy(() -> service.rotateRefreshToken("rt"))
                 .isInstanceOf(BusinessException.class)
@@ -135,7 +133,7 @@ class SessionTokensServiceTest {
         RefreshClaims claims = new RefreshClaims("jti-1", id.toString(), Instant.now().plusSeconds(60));
         RefreshTokens stored = storedToken(id, familyId, Status.ACTIVE, OffsetDateTime.now().plusMinutes(5));
         when(verifier.verify("rt", TokenKind.REFRESH)).thenReturn(new JwtParseResult.Ok(claims));
-        when(refreshTokensRepository.findByTokenHash(sha256("rt"))).thenReturn(Optional.of(stored));
+        when(refreshTokensRepository.findByTokenHash(hashToken("rt"))).thenReturn(Optional.of(stored));
         when(blacklist.tryRevoke(eq("jti-1"), anyLong())).thenReturn(false);
 
         assertThatThrownBy(() -> service.rotateRefreshToken("rt"))
@@ -150,7 +148,7 @@ class SessionTokensServiceTest {
         RefreshClaims claims = new RefreshClaims("jti-1", "not-a-uuid", Instant.now().plusSeconds(60));
         RefreshTokens stored = storedToken(UUID.randomUUID(), familyId, Status.ACTIVE, OffsetDateTime.now().plusMinutes(5));
         when(verifier.verify("rt", TokenKind.REFRESH)).thenReturn(new JwtParseResult.Ok(claims));
-        when(refreshTokensRepository.findByTokenHash(sha256("rt"))).thenReturn(Optional.of(stored));
+        when(refreshTokensRepository.findByTokenHash(hashToken("rt"))).thenReturn(Optional.of(stored));
         when(blacklist.tryRevoke(eq("jti-1"), anyLong())).thenReturn(true);
 
         assertThatThrownBy(() -> service.rotateRefreshToken("rt"))
@@ -166,7 +164,7 @@ class SessionTokensServiceTest {
         RefreshClaims claims = new RefreshClaims("jti-1", id.toString(), Instant.now().plusSeconds(60));
         RefreshTokens stored = storedToken(id, familyId, Status.ACTIVE, OffsetDateTime.now().plusMinutes(5));
         when(verifier.verify("rt", TokenKind.REFRESH)).thenReturn(new JwtParseResult.Ok(claims));
-        when(refreshTokensRepository.findByTokenHash(sha256("rt"))).thenReturn(Optional.of(stored));
+        when(refreshTokensRepository.findByTokenHash(hashToken("rt"))).thenReturn(Optional.of(stored));
         when(blacklist.tryRevoke(eq("jti-1"), anyLong())).thenReturn(true);
         when(userRepository.findById(id)).thenReturn(Optional.empty());
 
@@ -186,7 +184,7 @@ class SessionTokensServiceTest {
         RefreshClaims claims = new RefreshClaims("jti-1", id.toString(), Instant.now().plusSeconds(60));
         RefreshTokens stored = storedToken(id, familyId, Status.ACTIVE, OffsetDateTime.now().plusMinutes(5));
         when(verifier.verify("rt", TokenKind.REFRESH)).thenReturn(new JwtParseResult.Ok(claims));
-        when(refreshTokensRepository.findByTokenHash(sha256("rt"))).thenReturn(Optional.of(stored));
+        when(refreshTokensRepository.findByTokenHash(hashToken("rt"))).thenReturn(Optional.of(stored));
         when(blacklist.tryRevoke(eq("jti-1"), anyLong())).thenReturn(true);
         when(userRepository.findById(id)).thenReturn(Optional.of(user));
 
@@ -206,7 +204,7 @@ class SessionTokensServiceTest {
         RefreshClaims claims = new RefreshClaims("jti-1", id.toString(), Instant.now().plusSeconds(60));
         RefreshTokens stored = storedToken(id, familyId, Status.ACTIVE, OffsetDateTime.now().plusMinutes(5));
         when(verifier.verify("rt", TokenKind.REFRESH)).thenReturn(new JwtParseResult.Ok(claims));
-        when(refreshTokensRepository.findByTokenHash(sha256("rt"))).thenReturn(Optional.of(stored));
+        when(refreshTokensRepository.findByTokenHash(hashToken("rt"))).thenReturn(Optional.of(stored));
         when(blacklist.tryRevoke(eq("jti-1"), anyLong())).thenReturn(true);
         when(userRepository.findById(id)).thenReturn(Optional.of(user));
 
@@ -226,7 +224,7 @@ class SessionTokensServiceTest {
         RefreshClaims claims = new RefreshClaims("jti-1", id.toString(), exp);
         RefreshTokens stored = storedToken(id, familyId, Status.ACTIVE, OffsetDateTime.now().plusMinutes(5));
         when(verifier.verify("rt", TokenKind.REFRESH)).thenReturn(new JwtParseResult.Ok(claims));
-        when(refreshTokensRepository.findByTokenHash(sha256("rt"))).thenReturn(Optional.of(stored));
+        when(refreshTokensRepository.findByTokenHash(hashToken("rt"))).thenReturn(Optional.of(stored));
         when(blacklist.tryRevoke(eq("jti-1"), anyLong())).thenReturn(true);
         when(userRepository.findById(id)).thenReturn(Optional.of(user));
         IssuedTokenPair pair = new IssuedTokenPair("at2", "rt2", 60, 120, "Bearer");
@@ -243,7 +241,7 @@ class SessionTokensServiceTest {
                         && familyId.equals(rt.getTokenFamilyId())
                         && id.equals(rt.getUserId())
                         && rt.getStatus() == Status.ACTIVE
-                        && sha256("rt2").equals(rt.getTokenHash())
+                        && hashToken("rt2").equals(rt.getTokenHash())
         ));
     }
 
@@ -265,7 +263,7 @@ class SessionTokensServiceTest {
         RefreshTokens stored = storedToken(userId, familyId, Status.ACTIVE, OffsetDateTime.now().plusMinutes(5));
         when(verifier.verify("at", TokenKind.ACCESS)).thenReturn(new JwtParseResult.Ok(access));
         when(verifier.verify("rt", TokenKind.REFRESH)).thenReturn(new JwtParseResult.Ok(refresh));
-        when(refreshTokensRepository.findByTokenHash(sha256("rt"))).thenReturn(Optional.of(stored));
+        when(refreshTokensRepository.findByTokenHash(hashToken("rt"))).thenReturn(Optional.of(stored));
 
         service.revokeAccessAndRefresh("at", "rt");
 
@@ -278,7 +276,7 @@ class SessionTokensServiceTest {
     void revokeSkipsTokenThatFailsVerification() {
         when(verifier.verify("at", TokenKind.ACCESS)).thenReturn(new JwtParseResult.Invalid("bad"));
         when(verifier.verify("rt", TokenKind.REFRESH)).thenReturn(new JwtParseResult.Invalid("bad"));
-        when(refreshTokensRepository.findByTokenHash(sha256("rt"))).thenReturn(Optional.empty());
+        when(refreshTokensRepository.findByTokenHash(hashToken("rt"))).thenReturn(Optional.empty());
 
         service.revokeAccessAndRefresh("at", "rt");
 
@@ -292,20 +290,11 @@ class SessionTokensServiceTest {
         t.setId(UUID.randomUUID());
         t.setUserId(userId);
         t.setTokenFamilyId(familyId);
-        t.setTokenHash("hash");
+        t.setTokenHash(hashToken("rt"));
         t.setStatus(status);
         t.setExpiresAt(expiresAt);
         t.setCreatedAt(OffsetDateTime.now(ZoneOffset.UTC));
         return t;
-    }
-
-    private static String sha256(String raw) {
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            return HexFormat.of().formatHex(md.digest(raw.getBytes(StandardCharsets.UTF_8)));
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
     }
 
     private static User activeUser() {
