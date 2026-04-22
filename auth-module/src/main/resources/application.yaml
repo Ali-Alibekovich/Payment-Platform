@@ -26,7 +26,6 @@ jwt:
   clock-skew-seconds: ${JWT_CLOCK_SKEW_SECONDS:60}
   access-expiration-ms: ${JWT_ACCESS_EXPIRATION_MS:900000}
   refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:2592000000}
-
 auth:
   login:
     max-failed-attempts: ${AUTH_LOGIN_MAX_FAILED:5}

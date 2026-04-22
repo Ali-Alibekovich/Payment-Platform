@@ -10,6 +10,8 @@ import org.example.authmodule.entity.User;
 import java.time.Instant;
 import java.util.UUID;
 
+import static org.example.authmodule.service.SessionTokensService.hashToken;
+
 /**
  * Общие фикстуры для JWT-тестов: дефолтные properties/keys и прогруз пользователя.
  */
@@ -46,7 +48,7 @@ public final class JwtTestSupport {
         user.setUserId(UUID.randomUUID());
         user.setEmail("user@example.com");
         user.setFullName("Test User");
-        user.setPasswordHash("hash");
+        user.setPasswordHash(hashToken("rt"));
         user.setStatus(UserStatus.ACTIVE);
         user.setFailedLoginAttempts(0);
         user.setCreatedAt(Instant.now());
